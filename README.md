@@ -26,13 +26,35 @@ More informations about the KXStudio-Project you get here: https://kx.studio/
 Documentation: https://kx.studio/Documentation
 
 
-For more informations about QStudio64- go to our project-blog: http://qstudio64.tumblr.com
+QStudio64-Blog: http://qstudio64.tumblr.com 
+
+QStudio64-Homepage: https://qstudio64.io 
+
+
+
+°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+NOTE: QStudio64 21.1-XE is our 10y anniversary-release with some fixes and upgrades. 
+If you have QStudio64-21.1-SE/SX/XP installed you DON'T need to install it - just update!
+°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+Changes (SE/SX->XE):
+
+- All updates of 2024
+- Kernel Linux lowlatency-129 x86_64 
+- ubuntustudio-lowlatency-settings
+- Bitwig Studio 5.2.7*
+- Mixxx 2.5.0 
+- Element (Matrix chat)
+- fixed Brave Web-Browser sources 
+- fixed Brave-taskbar-symbol-st
+- grub customizer
 
 
 
 
 
-New or updated features:
+
+Features:
 
 
 SYSTEM
@@ -345,55 +367,36 @@ Reboot your system!
 
 
 
---> Debugging APT-CACHE/Sources.lists 
-
-If there is an error-message about "corrupted apt" in the Mintupdate
-or problems with mirror-switching and sources.lists-lock..
-
-write in terminal:
+3. Optimize your system
 
 
-sudo apt-get clean
-
-sudo apt-get check
- 
-sudo dpkg --configure -a
-
-sudo apt-get -f install
-
-sudo apt-get update && sudo apt-get dist-upgrade
-
-
-
-If this don't work, type in terminal:
-
-sudo rm -rf /var/lib/apt/lists/*
-sudo mkdir /var/lib/apt/lists/partial 
-sudo rm /var/cache/apt/*
-
-
-sudo apt-get update && sudo apt-get upgrade
-
-
-if you have always problems, type in terminal:
-
-apt-cache policy | grep 700
-
-cat /etc/apt/preferences.d/official-*
-
-
-Reboot!
-
-
-
-
-3. Add user to group audio
+Add user to group audio:
 
 
 sudo adduser yourusername audio
 
 
+
+
+Choose your desired kernel with grub-customizer (optional)
+
+-> (lowlatency-kernel is recommend!)
+
+
+
+Check if real-time-priority is set for group audio:
+
+Configure with editor as root: /etc/security/limits.conf 
+
+@audio          -       rtprio          99
+@audio          -       memlock         unlimited
+
+
+
+-> at the end of the script!
+
 - REBOOT THE SYSTEM!
+
 
 
 
@@ -419,49 +422,163 @@ that was not recognized and configured by system!
 - choose your favourite soundcard in software! (eg.vlc-player/ardour/bitwig/mixxx,,)
 
 
-If you need to use your usb-soundcard as primary soundcard in ALSA permanently you just have to 
-modify your alsa-base.conf as root in /etc/modprobe.d (e.g. to hear sound from firefox/banshee over usb):
+-------------------------
 
-->Write at the end of your alsa-base.conf
+ALSA Soundconfiguration
+------------------------
 
-write in terminal:
-xed admin:///etc/modprobe.d/alsa-base.conf
+Identify Sound Cards: 
 
-example:
+Use the following commands:
 
-options snd_usb_audio index=0
-options snd_hda_intel index=1
-options snd_hda_intel index=2    #HDMI
-options snd_aloop index=3
 
-To get the right informations about your chipset and kernel-modules write in terminal::
+List of kernel-modules:
+
+cat /proc/asound/modules 
+ 0 snd_hda_intel
+ 1 snd_usb_audio
+
+
+
+aplay -l 
+
+to list all available sound cards and their corresponding device numbers. For example, the output might look like this:
+
+**** List of PLAYBACK Hardware Devices ****
+card 0: MyCard1 [My Sound Card 1], device 0: Device 0 [Device 0]
+card 1: MyCard2 [My Sound Card 2], device 0: Device 0 [Device 0]
+
+
+
+To select a default sound card in ALSA on QStudio64, you have many options:
+
+1. Open alsamixer in terminal: 
+
+alsamixer
+
+Use the F6 key to select the desired sound card. Then, save the settings with 
+sudo alsactl store
+
+
+
+2. Find your desired card with:
 
 cat /proc/asound/cards
 
-[example]
-0 [Intel
-]: HDA-Intel - HDA Intel
-HDA Intel at 0xf0500000 irq 22
-1 [Headset
-]: USB-Audio - Logitech USB Headset
-Logitech Logitech USB Headset at usb-0000:00:1d.0-1, full
-speed
+
+and then create /etc/asound.conf with the following entries:
+
+defaults.pcm.card 1
+defaults.ctl.card 1
+
+Replace 1 with number of your card determined above. Source: https://www.alsa-project.org/wiki/Setting_the_default_device
 
 
-List of Kernel-Modules:
+Other method:
 
-cat /proc/asound/modules
+ 
+Change priority:
 
-0 snd_hda_intel
-1 snd_usb_audio
+sudo bash
+echo options snd_usb_audio index=0 >> /etc/modprobe.d/sound-cards-order
+echo options snd_hda_intel index=1 >> /etc/modprobe.d/sound-cards-order
+exit 
+
+
+sudo reboot 
+
+-> to get back your old settings just delete: /etc/modprobe.d/sound-cards-order and reboot.
 
 
 
- REBOOT THE SYSTEM!
+3. Edit /etc/modprobe.d/alsa-base.conf:
+
+Open the file with a text editor as root:
+
+sudo nano /etc/modprobe.d/alsa-base.conf
+
+Add the following lines to specify the index for your preferred sound card:
 
 
-NOTE: Some chipsets configures the hdmi-audio as default soundcard.
-In this case you have to configure your soundcards in alsa.base.conf too. 
+options snd-usb-audio index=-2
+options snd-hda-intel index=0
+
+
+Replace snd-usb-audio and snd-hda-intel with the appropriate driver for your sound card. 
+The index values -2 and 0 are used to set the priority of the sound cards.
+
+
+
+4. Edit /etc/asound.conf:
+
+If you need more specific configuration, you can create or edit /etc/asound.conf:
+
+sudo nano /etc/asound.conf
+
+Add the following lines to set the default PCM card and device:
+
+
+defaults.pcm.card 0
+defaults.pcm.device 0
+defaults.ctl.card 0
+defaults.ctl.device 0
+
+
+Replace 0 with the appropriate index of your sound card.
+
+
+
+Other way:
+
+5. Edit Configuration Files: Modify the /etc/asound.conf or ~/.asoundrc file to specify the default sound card. 
+For example, to set the default sound card to card 1, you can add the following lines to the configuration file:
+
+
+pcm.!default {
+    type hw
+    card 1
+}
+ctl.!default {
+    type hw
+    card 1
+}
+
+
+Kernel Module Options: Adjust the kernel module options to disable or enable specific sound cards. For instance, to disable the second card operated by a module, you can add the following to /etc/modprobe.d/alsa-base.conf:
+options module_name enable=1,0
+
+Use alsactl: Save the current ALSA settings with alsactl store and restore them on boot. This ensures that your preferred sound card settings persist across reboots.
+
+Blacklisting Modules: If you want to disable a specific sound card, you can blacklist its kernel module by adding a line to /etc/modprobe.d/blacklist.conf. For example, to disable the second sound card, you might add:
+
+blacklist snd_hda_intel
+
+
+Check Device Files: Identify processes using sound device files with 
+
+fuser --all --verbose /dev/snd/* 
+
+and stop them before reloading ALSA driver configuration.
+
+
+These methods should help you configure ALSA to use your preferred sound card.
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+For JACK use you can configure your default soundcard in Cadence gui under (ALSA) settings!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+More infos: 
+
+https://kx.studio/Documentation:Manual:alsa_and_kxstudio
+
+https://www.alsa-project.org/main/index.php/Asoundrc
+
+https://search.brave.com/search?q=soundcard+alsa+selector+
+
+
 
 
 CADENCE (JACK)
@@ -471,7 +588,9 @@ Cadence is THE tool to configure and control the Jack-Server for professional au
 
 Configure your soundcard(s) right in cadence and choose your favourite soundcard (Alsa)!
 
-more: http://kxstudio.linuxaudio.org/Documentation:Manual:cadence_introduction
+more: https://kx.studio/Documentation:Manual:cadence_introduction
+
+      https://kx.studio/Documentation:Manual:jack_configuration
 
 
 There are some recommend configuration-settings and bridge-modes with cadence:
@@ -483,9 +602,7 @@ on an external soundcard!
 to get normal sound over ALSA again!)
 
 
- To run an ICECAST-webradio-server go to manuals in home/README/Tweaks.
 
------------------------------------------------------------------------
 
 HEAR NO SOUND?
 --------------
@@ -511,19 +628,94 @@ It s also recommend to DISABLE THE STANDBY OR SUSPEND-MODUS in energy-settings (
 
 
 
-BLUETOOTH
----------
+-----------------------------------------------------------------------
 
-Bluetooth-Audio is not official supported in QStudio64!
+ To run an ICECAST-webradio-server go to manuals in home/README/Tweaks.
 
--> Advanced users could install:
+-----------------------------------------------------------------------
 
-sudo apt install bluez-alsa-utils 
+------------------------------------------------------------------
+Bluetooth in QStudio64 (for ALSA-based systems without pulseaudio)
+------------------------------------------------------------------
 
-It's a Bluetooth Audio ALSA Backend allowing bluetooth audio without PulseAudio:
+#Install bluez-alsa-utils
 
--> https://github.com/arkq/bluez-alsa/wiki
--> https://github.com/arkq/bluez-alsa/wiki/Setting-up-a-USB-audio-device-as-a-Bluetooth-speaker-under-Ubuntu
+sudo apt install bluez-alsa-utils libasound2-plugin-bluez
+
+Connect, Pair and trust with the blueman-applet in taskbar!
+Notice the MAC-Adress of your bluetooth devicde!
+
+Create a hidden file .asoundrc in /home with the content:
+
+defaults.bluealsa.service "org.bluealsa"
+defaults.bluealsa.device "XX:XX:XX:XX:XX:XX"
+defaults.bluealsa.profile "a2dp"
+defaults.bluealsa.delay 10000
+
+and fill in the mac-adress of your bluetooth device!
+
+
+Choose "bluealsa -Bluetooth Audio Hub" as audiodevice
+and "bluealsa" as mixer in player (e.g. vlc, audacious)
+
+Enjoy the sound! :)
+
+-> After using bluetooth you have to delete (or rename) .asoundrc to get audio working!*
+
+-> IF you face problems to connect or error-messages just reboot the system
+and try again!
+
+It works!!!
+
+
+
+-------------------------------
+*Bluetooth On/Off-Button-Script 
+-------------------------------
+
+Here is a little workaround to create two On/Off-"Button"-script-files to start or end the bluez-alsa
+connection with .asoundrc (after you configured and tested it succesfully):
+
+Just create 2 files with:
+
+
+#!/bin/bash
+cd /home/YOURUSERNAME/
+mv .asoundrcOFF .asoundrc
+
+
+->this script is to start bluetooth asoundrc!
+
+and in another file:
+
+
+#!/bin/bash
+cd /home/YOURUSERNAME/
+mv .asoundrc .asoundrcOFF
+
+
+-> this script is to rename .asoundrc and deactivate it!
+
+(-> replace YOURUSERNAME with your given username)
+
+
+You can give titles like "BT-ON" "BT-OFF" and own buttonicons. ;)
+
+
+-> Be sure to make the files executable!
+
+-> Execute in terminal to start and stop bt-audio
+
+-> ATTENTION: If .asoundrc is not deleted/disabled 
+   after bluetooth-session you will hear no sound!
+
+
+
+more infos:
+
+https://github.com/arkq/bluez-alsa
+
+https://github.com/arkq/bluez-alsa/wiki
 
 
 To get bluetooth really fast working (re-)install Pulseaudio:
@@ -531,9 +723,8 @@ To get bluetooth really fast working (re-)install Pulseaudio:
 sudo apt-get install pulseaudio libcanberra-pulse pulseaudio-module-bluetooth pulseaudio-module-jack 
 
 
-NOTE: While installing pulseaudio you reset to Linux Mint default sound settings!
-
-
+NOTE: While installing pulseaudio you reset to Linux Mint default sound settings! (NOT recommended!)
+                          
 
 
 
@@ -570,11 +761,6 @@ Libre Music (Linux Audio Website): http://libremusicproduction.com/
 
 Linux-Audio-Forum: https://linuxmusicians.com/
 
-##############################################################################
-THERE IS ALSO A DETAILED MANUAL ABOUT SOUNDCONFIGURATION IN THE README-FOLDER!
-##############################################################################
-
-If you are NOT experienced in Linux-Audio it's really recommend to read these articels first!
 
 
 
@@ -582,13 +768,12 @@ If you are NOT experienced in Linux-Audio it's really recommend to read these ar
 BITWIG Studio/8track/Demo
 ------------------------- 
 
-Qstudio64 21.1 contains Bitwig Studio 4*.
+Qstudio64 21.1 contains Bitwig Studio*.
 
 
 --> It's recommended to use always the latest version from bitwig.com!
 
 <A CPU which supports the SSE 4.1 instruction set is required!>
-
 
 
 
@@ -602,6 +787,11 @@ Start the program and activate the licence. Now you have the full 8-track OR bit
 
 --> If you don't have a licence-key you can try Bitwig Studio in DEMO-MODE with saving/export-options disabled.
 
+
+PROMO
+-----
+
+Write us an email to lmaudio@subvertising.org and maybe get one of 100 Bitwig Studio 8-Tracks licences ;)
 
 
 Audio-Settings
@@ -623,7 +813,9 @@ MIXXX
 
 TROUBLESHOOT: Mixxx freezes, crashes, or otherwise misbehaves with some nVidia graphics cards:
 
-Before you try anything else, please update or reinstall your nVidia graphics driver. (This applies to all OSes.) Even if it is the same exact version, apparently it is fickle and needs to be rebuilt/reinstalled any time things change in the OS. Try this first before going any further.
+Before you try anything else, please update or reinstall your nVidia graphics driver. (This applies to all OSes.) 
+Even if it is the same exact version, apparently it is fickle and needs to be rebuilt/reinstalled any time things change in the OS. 
+Try this first before going any further.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Mostly the actual nonfree-nVidia-driver has to be installed via driver-manager! 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -883,6 +1075,46 @@ If you don't know the old password you given you have to reset the keyrings!
 
 
 
+--> Debugging APT-CACHE/Sources.lists 
+-------------------------------------
+
+If there is an error-message about "corrupted apt" in the Mintupdate
+or problems with mirror-switching and sources.lists-lock..
+
+write in terminal:
+
+
+sudo apt-get clean
+
+sudo apt-get check
+ 
+sudo dpkg --configure -a
+
+sudo apt-get -f install
+
+sudo apt-get update && sudo apt-get dist-upgrade
+
+
+
+If this don't work, type in terminal:
+
+sudo rm -rf /var/lib/apt/lists/*
+sudo mkdir /var/lib/apt/lists/partial 
+sudo rm /var/cache/apt/*
+
+
+sudo apt-get update && sudo apt-get upgrade
+
+
+if you have always problems, type in terminal:
+
+apt-cache policy | grep 700
+
+cat /etc/apt/preferences.d/official-*
+
+
+Reboot!
+
 
 
 
@@ -1085,7 +1317,7 @@ xed admin:///etc/lsb-release
 
 give the entry at the end:
 
-DISTRIB_DESCRIPTION="QStudio64-21.1-SE"
+DISTRIB_DESCRIPTION="QStudio64-21.1-SX"
 
 and save the file.
 
@@ -1175,7 +1407,9 @@ it's recommend to stay with the solid Linux Mint 21.1 base.
 
 KNOWN ISSUES AND UPDATED INFORMATIONS
 -------------------------------------
-...you will find in the updated RELEASE NOTES at our project-blog: http://qstudio64.tumblr.com/
+...you will find in the updated RELEASE NOTES at our project-blog: http://qstudio64.tumblr.com
+
+or on our new homepage: https://qstudio64.io (Big thanx to Ruffy <3 !)
 
 
 
@@ -1189,7 +1423,7 @@ Enjoy!
 HAVE FUN- BE CREATIVE!
 _______________________
 
-c.h.a.l.e.e. 31/03/2023
+c.h.a.l.e.e. 31/12/2024
 _______________________
  
 BIG THANX TO:
@@ -1200,7 +1434,7 @@ https://mixxx.org/
 
 https://ardour.org/
 
-https://kxstudio.linuxaudio.org/
+https://kx.studio/
 
 https://linuxmint.com
 
@@ -1213,4 +1447,4 @@ GIVE DONATIONS! :-)
 NO WARRANTYS! UNDER THE GPL 2/3.0./// FREE TO USE AND SHARE!*
 _____________________________________________________________________________
 
-                                                           Rev.beta9_2 SE
+                                                          Rev.beta11_1-XE***
