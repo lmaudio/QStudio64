@@ -427,6 +427,11 @@ that was not recognized and configured by system!
 ALSA Soundconfiguration
 ------------------------
 
+QStudio64 (QS64) detects & configures mostly the (onboard) soundcard as default soundcard.
+ 
+Sometimes the hdmi-output could be autoconfigured by ALSA as the default and if you have more than one soundinterface, you should select your desired default soundcard too!
+
+
 Identify Sound Cards: 
 
 Use the following commands:
@@ -452,6 +457,7 @@ card 1: MyCard2 [My Sound Card 2], device 0: Device 0 [Device 0]
 
 To select a default sound card in ALSA on QStudio64, you have many options:
 
+
 1. Open alsamixer in terminal: 
 
 alsamixer
@@ -460,38 +466,82 @@ Use the F6 key to select the desired sound card. Then, save the settings with
 sudo alsactl store
 
 
+2. A fast and easy way to control multiple soundcards in QS64 is to use the JACK AUDIO SERVER,
+choosing your desired soundinterface in Cadence under "Configure/Driver/ALSA", starting an ALSA-LOOP-JACK-Bridge 
+to have sound in browsers over usb and to mark "Auto-start JACK or LADISH at login" to have JACK as an autostart service! (Recommend for professional daw usage!)
+ 
 
-2. Find your desired card with:
+3. Also you can configure your default soundcard just in ALSA with:
+
+#Find your desired card:
 
 cat /proc/asound/cards
 
 
-and then create /etc/asound.conf with the following entries:
+#and then create /etc/asound.conf with the following entries:
 
 defaults.pcm.card 1
 defaults.ctl.card 1
 
-Replace 1 with number of your card determined above. Source: https://www.alsa-project.org/wiki/Setting_the_default_device
+#Replace 1 with number of your card determined above. 
+
+Source: https://www.alsa-project.org/wiki/Setting_the_default_device
+
+
+
+USB-soundinterface On/Off-"Button"-script:
+-----------------------------------------
+
+If you have configured asound.conf and choosed (for example) card "2" for your usb-interface
+you can execute an own written bash-script as On/Off-button or just using the renaming commands!
+
+Create 2 files without ending und give the entry:
+
+
+This renames and deactivates asound.conf and brings the usb-soundinterface back as default:
+ 
+#!/bin/bash
+sudo mv /etc/asound.conf /etc/asoundOFF.conf
+
+
+This renames and activates asound.conf and brings onboardsound back as default:
+
+#!/bin/bash
+sudo mv /etc/asoundOFF.conf /etc/asound.conf
+
+Save and make them executable, start with terminal!
+
+
+You can also just use the single mv commands in terminal to activate/deactivate your configured usb-interface as default soundcard!!
+
+---
+
+Advanced config example:
+
+Playback on your build in sondcard and capture (microphone) from external USB device.
+
+Your external device is listed as card 2: device 0 and your build in soundcard as card 0: device 0
+
+your asound.conf should look something like this:
+
+
+pcm.!default
+{
+  playback.pcm
+  {
+    type hw
+    card 0
+    device 0
+  }
 
 
 Other method:
 
  
-Change priority:
-
-sudo bash
-echo options snd_usb_audio index=0 >> /etc/modprobe.d/sound-cards-order
-echo options snd_hda_intel index=1 >> /etc/modprobe.d/sound-cards-order
-exit 
+4. Change priority:
 
 
-sudo reboot 
-
--> to get back your old settings just delete: /etc/modprobe.d/sound-cards-order and reboot.
-
-
-
-3. Edit /etc/modprobe.d/alsa-base.conf:
+Edit /etc/modprobe.d/alsa-base.conf:
 
 Open the file with a text editor as root:
 
@@ -507,30 +557,20 @@ options snd-hda-intel index=0
 Replace snd-usb-audio and snd-hda-intel with the appropriate driver for your sound card. 
 The index values -2 and 0 are used to set the priority of the sound cards.
 
+example:
 
+options snd-usb-audio index=0
+options snd-hda-intel index=1
 
-4. Edit /etc/asound.conf:
+-> is setting the usb-soundinterface as default soundcard!
 
-If you need more specific configuration, you can create or edit /etc/asound.conf:
-
-sudo nano /etc/asound.conf
-
-Add the following lines to set the default PCM card and device:
-
-
-defaults.pcm.card 0
-defaults.pcm.device 0
-defaults.ctl.card 0
-defaults.ctl.device 0
-
-
-Replace 0 with the appropriate index of your sound card.
+Save settings and reboot!
 
 
 
 Other way:
 
-5. Edit Configuration Files: Modify the /etc/asound.conf or ~/.asoundrc file to specify the default sound card. 
+6. Edit Configuration Files: Modify the /etc/asound.conf or ~/.asoundrc file to specify the default sound card. 
 For example, to set the default sound card to card 1, you can add the following lines to the configuration file:
 
 
@@ -1447,4 +1487,5 @@ GIVE DONATIONS! :-)
 NO WARRANTYS! UNDER THE GPL 2/3.0./// FREE TO USE AND SHARE!*
 _____________________________________________________________________________
 
-                                                          Rev.beta11_1-XE***
+                                                         Rev.beta11_1-XE*****
+
