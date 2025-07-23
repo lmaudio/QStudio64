@@ -33,24 +33,17 @@ QStudio64-Homepage: https://qstudio64.io
 
 
 °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-NOTE: QStudio64 21.1-XE is our 10y anniversary-release with some fixes and upgrades. 
+NOTE: QStudio64 21.1-Xi is our 10y anniversary-release with some fixes and upgrades. 
 If you have QStudio64-21.1-SE/SX/XP installed you DON'T need to install it - just update!
 °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-Changes (SE/SX->XE):
+Changes (XE/XP->Xi):
 
-- All updates of 2024
-- Kernel Linux lowlatency-129 x86_64 
-- ubuntustudio-lowlatency-settings
-- Bitwig Studio 5.2.7*
-- Mixxx 2.5.0 
-- Element (Matrix chat)
-- fixed Brave Web-Browser sources 
-- fixed Brave-taskbar-symbol-st
-- grub customizer
-
-
-
+- All updates <17072025
+- Kernel Linux 5.15.0-144-lowlatency x86_64 
+- UEFI-SHIM Upgrade (Cert-Bugfix)
+- Bitwig Studio 5.3.12*
+- Mixxx 2.5.2 
 
 
 
@@ -144,6 +137,8 @@ OFFICE/INTERNET
 - Brave Web-Browser
 
 - Thunderbird (Mail)
+
+- Element (Matrix-Chat)
 
 - Libre Office
 
@@ -1463,7 +1458,7 @@ Enjoy!
 HAVE FUN- BE CREATIVE!
 _______________________
 
-c.h.a.l.e.e. 31/12/2024
+c.h.a.l.e.e. 17/07/2025
 _______________________
  
 BIG THANX TO:
@@ -1487,5 +1482,4 @@ GIVE DONATIONS! :-)
 NO WARRANTYS! UNDER THE GPL 2/3.0./// FREE TO USE AND SHARE!*
 _____________________________________________________________________________
 
-                                                         Rev.beta11_1-XE*****
-
+                                                         Rev.beta11_2-Xi*
